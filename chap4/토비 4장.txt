@@ -1,0 +1,59 @@
+4.1 초난감 예외처리
+
+jdbc api를 썼더니 IDE가 빨간 줄로 에러 표시 해줌
+try catch 문으로 해결하였으나 catch에 아무 처리도 안하는 코드 존재하는 문제
+
+System.out.print(e) , e.printSTackTrace()
+는 에러를 처리한것이 아님 단순 출력만 한것
+
+에러 처리의 원칙 : 모든 예외는 적절하게 복구되든지 작업을 중단하고 개발자에게 통보해야함
+
+예외를 잡아서 조치를 취할 방법이 없다면 throws SQLException을 선언해서
+메소드 밖으로 던지고 자신을 호출한 코드에 예외처리 책임을 전가하자
+
+하지만 무차별적으로 throw하는 것도 좋은 방법은 아님
+
+예외의 종류와 특징
+
+java.lang.error 
+시스템에 뭔가 비정상적인 상황이 발생하는 경우  이므로 애플리케이션 코드에서 처리 안해도됨
+
+java.lang.RuntimeException 상속한 클래스 : 언체크 예외
+예외처리를 강제 하지 않음
+피할 수 있지만 개발자의 부주의로 발생할 수 있는 경우에 발생
+런타임 예외는 
+할당하지 않은 레퍼런스 변수를 사용하려고 시도 : nullpointerException
+허용되지 않는 값을 사용해서 메소드를 호출할때 : IllegalArgumentException
+
+체크 예외
+runtimeExeception을 상속 하지 않음
+체크 예외는 반드시 catch로 잡던가 throws로 던져야 한다.(하지 않으면 컴파일 에러 발생)
+
+예외처리 방법
+예외 복구 : 예외 상황을 파악하고 문제를 해결해서 정상 상태로 돌려 놓음
+
+예외 처리 회피
+예외처리를 자신이 담당하지 않고, 자신을 호출한 쪽으로 던져 버리는 것
+
+예외 전환
+예외를 밖으로 던진다는 것은 예외 회피와 비슷하지만, 그대로 넘기지 않고 적절한 예외로
+전환해서 던짐
+ex) SQLException 으로 던져지면 무슨 에러인지 정확히 파악이 힘드므로 DuplicateUserIdException
+과 같은 예외로 바꿔서 던져줌
+
+대응이 불가능한 체크 예외라면 빨리 런타임 예외로 전화해서 던지는게 나음
+
+예제로 돌아와서 SQLException은 코드 레벨에서 해결할 방법이 거의 없다.
+기계적인 throws 선언이 등장하도록 방치하지 말고 가능한 빨리 언체크/런타임 예외로 전환한다.
+
+스프링의 JdbcTemplate도 SQLException을 DataAccessException으로 포장해서 던져준다.
+
+스프링은 jdbc, jpa 등등을 사용할때 발생하는 예외를 DataAccessException 계층 구조에 정리해놓음
+
+그래서 jdbc jpa 어떤걸 쓰든 DataAccessException만 있으면 수정할게 없음
+스프링이 DataAccessException을 이용해 기술에 독립적인 예외를 정의하는 이유
+jdbc api 는 SQLException을 던지고 JPA는 PersistentException을 던짐
+
+SQLException을 던지도록 선언한 인터페이스 메소드는 JDBC api가 JPA로 변경될때마다 SQLException을
+PersistentException으로 바꿔줘야 한다.
+
